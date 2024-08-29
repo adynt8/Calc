@@ -3,190 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator App with Memory and History</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <title>Multi-Use Calculator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        nav {
-            margin-bottom: 20px;
-        }
-        nav a {
-            margin-right: 10px;
-        }
-        .calculator {
-            display: none;
-        }
-        .active {
-            display: block;
-        }
-        input, select, button {
-            margin: 5px;
-            padding: 5px;
-        }
-        #normalCalculator button {
-            width: 50px;
-        }
-        #memoryDisplay {
-            font-size: 0.8em;
-            color: #666;
-            margin-top: 5px;
-        }
-        #historyContainer {
-            margin-top: 20px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .historyItem {
-            cursor: pointer;
-            padding: 5px;
-            border-bottom: 1px solid #eee;
-        }
-        .historyItem:hover {
+            text-align: center;
             background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .calculator {
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .calc {
+            margin-top: 20px;
+        }
+
+        .buttons button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        #graphCanvas {
+            border: 1px solid #333;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <nav>
-        <a href="#" onclick="showCalculator('graphing')">Graphing Calculator</a>
-        <a href="#" onclick="showCalculator('conversion')">Conversion Calculator</a>
-        <a href="#" onclick="showCalculator('normal')">Normal Calculator</a>
-    </nav>
+    <h1>Multi-Use Calculator</h1>
+    <div class="calculator">
+        <div class="calculator-type">
+            <button onclick="showCalculator('basic')">Basic</button>
+            <button onclick="showCalculator('scientific')">Scientific</button>
+            <button onclick="showCalculator('conversion')">Conversion</button>
+            <button onclick="showCalculator('graphing')">Graphing</button>
+        </div>
 
-    <!-- Graphing Calculator and Conversion Calculator sections remain unchanged -->
+        <!-- Basic Calculator -->
+        <div id="basic" class="calc">
+            <h2>Basic Calculator</h2>
+            <input type="text" id="basicInput" placeholder="0" disabled>
+            <div class="buttons">
+                <button onclick="appendNumber('1')">1</button>
+                <button onclick="appendNumber('2')">2</button>
+                <button onclick="appendNumber('3')">3</button>
+                <button onclick="appendNumber('+')">+</button>
+                <!-- Add more buttons as needed -->
+                <button onclick="calculateBasic()">=</button>
+                <button onclick="clearBasic()">C</button>
+            </div>
+        </div>
 
-    <div id="normalCalculator" class="calculator">
-        <h2>Normal Calculator</h2>
-        <input type="text" id="display" readonly>
-        <div id="memoryDisplay">Memory: 0</div>
-        <br>
-        <button onclick="appendToDisplay('7')">7</button>
-        <button onclick="appendToDisplay('8')">8</button>
-        <button onclick="appendToDisplay('9')">9</button>
-        <button onclick="appendToDisplay('/')">/</button>
-        <button onclick="memoryStore()">MS</button>
-        <br>
-        <button onclick="appendToDisplay('4')">4</button>
-        <button onclick="appendToDisplay('5')">5</button>
-        <button onclick="appendToDisplay('6')">6</button>
-        <button onclick="appendToDisplay('*')">*</button>
-        <button onclick="memoryRecall()">MR</button>
-        <br>
-        <button onclick="appendToDisplay('1')">1</button>
-        <button onclick="appendToDisplay('2')">2</button>
-        <button onclick="appendToDisplay('3')">3</button>
-        <button onclick="appendToDisplay('-')">-</button>
-        <button onclick="memoryAdd()">M+</button>
-        <br>
-        <button onclick="appendToDisplay('0')">0</button>
-        <button onclick="appendToDisplay('.')">.</button>
-        <button onclick="calculate()">=</button>
-        <button onclick="appendToDisplay('+')">+</button>
-        <button onclick="memorySubtract()">M-</button>
-        <br>
-        <button onclick="clearDisplay()">C</button>
-        <button onclick="memoryClear()">MC</button>
+        <!-- Scientific Calculator -->
+        <div id="scientific" class="calc" style="display:none;">
+            <h2>Scientific Calculator</h2>
+            <input type="text" id="scientificInput" placeholder="0" disabled>
+            <div class="buttons">
+                <button onclick="appendSci('sin')">sin</button>
+                <button onclick="appendSci('cos')">cos</button>
+                <!-- Add more buttons as needed -->
+                <button onclick="calculateScientific()">=</button>
+                <button onclick="clearScientific()">C</button>
+            </div>
+        </div>
 
-        <div id="historyContainer">
-            <h3>Calculation History</h3>
-            <div id="historyList"></div>
+        <!-- Conversion Calculator -->
+        <div id="conversion" class="calc" style="display:none;">
+            <h2>Unit Conversion</h2>
+            <input type="number" id="conversionInput">
+            <select id="conversionType">
+                <option value="milesToKm">Miles to Kilometers</option>
+                <option value="kgToLbs">Kilograms to Pounds</option>
+                <!-- Add more conversions as needed -->
+            </select>
+            <button onclick="convert()">Convert</button>
+            <p id="conversionResult"></p>
+        </div>
+
+        <!-- Graphing Calculator -->
+        <div id="graphing" class="calc" style="display:none;">
+            <h2>Graphing Calculator</h2>
+            <input type="text" id="graphFunction" placeholder="Enter function (e.g., y=x^2)">
+            <button onclick="plotGraph()">Plot</button>
+            <canvas id="graphCanvas" width="200" height="200"></canvas>
         </div>
     </div>
 
     <script>
-        let currentCalculator = 'graphing';
-        let chart;
-        let memory = 0;
-        let history = [];
-
-        function showCalculator(calculatorType) {
-            document.getElementById(currentCalculator + 'Calculator').classList.remove('active');
-            document.getElementById(calculatorType + 'Calculator').classList.add('active');
-            currentCalculator = calculatorType;
+        function showCalculator(type) {
+            document.querySelectorAll('.calc').forEach(calc => calc.style.display = 'none');
+            document.getElementById(type).style.display = 'block';
         }
 
-        // Graphing Calculator and Conversion Calculator functions remain unchanged
-
-        function appendToDisplay(value) {
-            document.getElementById('display').value += value;
+        // Basic Calculator Functions
+        function appendNumber(number) {
+            document.getElementById('basicInput').value += number;
         }
 
-        function clearDisplay() {
-            document.getElementById('display').value = '';
+        function calculateBasic() {
+            let result = eval(document.getElementById('basicInput').value);
+            document.getElementById('basicInput').value = result;
         }
 
-        function calculate() {
-            try {
-                const expression = document.getElementById('display').value;
-                const result = eval(expression);
-                document.getElementById('display').value = result;
-                addToHistory(expression, result);
-            } catch (error) {
-                document.getElementById('display').value = 'Error';
+        function clearBasic() {
+            document.getElementById('basicInput').value = '';
+        }
+
+        // Scientific Calculator Functions
+        function appendSci(func) {
+            document.getElementById('scientificInput').value += func + '(';
+        }
+
+        function calculateScientific() {
+            let result = eval(document.getElementById('scientificInput').value);
+            document.getElementById('scientificInput').value = result;
+        }
+
+        function clearScientific() {
+            document.getElementById('scientificInput').value = '';
+        }
+
+        // Conversion Functions
+        function convert() {
+            let input = parseFloat(document.getElementById('conversionInput').value);
+            let type = document.getElementById('conversionType').value;
+            let result;
+
+            if (type === 'milesToKm') {
+                result = input * 1.60934;
+            } else if (type === 'kgToLbs') {
+                result = input * 2.20462;
             }
+
+            document.getElementById('conversionResult').textContent = 'Result: ' + result;
         }
 
-        function updateMemoryDisplay() {
-            document.getElementById('memoryDisplay').textContent = `Memory: ${memory}`;
-        }
+        // Graphing Function
+        function plotGraph() {
+            let functionInput = document.getElementById('graphFunction').value;
+            let canvas = document.getElementById('graphCanvas');
+            let ctx = canvas.getContext('2d');
 
-        function memoryStore() {
-            memory = parseFloat(document.getElementById('display').value) || 0;
-            updateMemoryDisplay();
-        }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        function memoryRecall() {
-            document.getElementById('display').value = memory;
-        }
-
-        function memoryAdd() {
-            memory += parseFloat(document.getElementById('display').value) || 0;
-            updateMemoryDisplay();
-        }
-
-        function memorySubtract() {
-            memory -= parseFloat(document.getElementById('display').value) || 0;
-            updateMemoryDisplay();
-        }
-
-        function memoryClear() {
-            memory = 0;
-            updateMemoryDisplay();
-        }
-
-        function addToHistory(expression, result) {
-            history.unshift({ expression, result });
-            if (history.length > 10) {
-                history.pop();
+            ctx.beginPath();
+            for (let x = -10; x <= 10; x += 0.1) {
+                let y = eval(functionInput.replace(/x/g, x));
+                ctx.lineTo(x * 20 + 100, -y * 20 + 100);
             }
-            updateHistoryDisplay();
+            ctx.stroke();
         }
-
-        function updateHistoryDisplay() {
-            const historyList = document.getElementById('historyList');
-            historyList.innerHTML = '';
-            history.forEach((item, index) => {
-                const historyItem = document.createElement('div');
-                historyItem.classList.add('historyItem');
-                historyItem.textContent = `${item.expression} = ${item.result}`;
-                historyItem.onclick = () => recallHistory(index);
-                historyList.appendChild(historyItem);
-            });
-        }
-
-        function recallHistory(index) {
-            document.getElementById('display').value = history[index].result;
-        }
-
-        // Show the graphing calculator by default
-        showCalculator('graphing');
     </script>
 </body>
 </html>
