@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        nav {
+            margin-bottom: 20px;
+        }
+        nav a {
+            margin-right: 10px;
+        }
+        .calculator {
+            display: none;
+        }
+        .active {
+            display: block;
+        }
+        input, select, button {
+            margin: 5px;
+            padding: 5px;
+        }
+        #normalCalculator button {
+            width: 50px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="#" onclick="showCalculator('graphing')">Graphing Calculator</a>
+        <a href="#" onclick="showCalculator('conversion')">Conversion Calculator</a>
+        <a href="#" onclick="showCalculator('normal')">Normal Calculator</a>
+    </nav>
+
+    <div id="graphingCalculator" class="calculator">
+        <h2>Graphing Calculator</h2>
+        <input type="text" id="function" placeholder="Enter function (e.g., x^2)">
+        <button onclick="plotFunction()">Plot</button>
+        <canvas id="graph"></canvas>
+    </div>
+
+    <div id="conversionCalculator" class="calculator">
+        <h2>Conversion Calculator</h2>
+        <input type="number" id="conversionInput" placeholder="Enter value">
+        <select id="fromUnit">
+            <option value="km">Kilometers</option>
+            <option value="miles">Miles</option>
+            <option value="kg">Kilograms</option>
+            <option value="lbs">Pounds</option>
+        </select>
+        <select id="toUnit">
+            <option value="miles">Miles</option>
+            <option value="km">Kilometers</option>
+            <option value="lbs">Pounds</option>
+            <option value="kg">Kilograms</option>
+        </select>
+        <button onclick="convert()">Convert</button>
+        <p id="conversionResult"></p>
+    </div>
+
+    <div id="normalCalculator" class="calculator">
+        <h2>Normal Calculator</h2>
+        <input type="text" id="display" readonly>
+        <br>
+        <button onclick="appendToDisplay('7')">7</button>
+        <button onclick="appendToDisplay('8')">8</button>
+        <button onclick="appendToDisplay('9')">9</button>
+        <button onclick="appendToDisplay('/')">/</button>
+        <br>
+        <button onclick="appendToDisplay('4')">4</button>
+        <button onclick="appendToDisplay('5')">5</button>
+        <button onclick="appendToDisplay('6')">6</button>
+        <button onclick="appendToDisplay('*')">*</button>
+        <br>
+        <button onclick="appendToDisplay('1')">1</button>
+        <button onclick="appendToDisplay('2')">2</button>
+        <button onclick="appendToDisplay('3')">3</button>
+        <button onclick="appendToDisplay('-')">-</button>
+        <br>
+        <button onclick="appendToDisplay('0')">0</button>
+        <button onclick="appendToDisplay('.')">.</button>
+        <button onclick="calculate()">=</button>
+        <button onclick="appendToDisplay('+')">+</button>
+        <br>
+        <button onclick="clearDisplay()">C</button>
+    </div>
+
+    <script>
+        let currentCalculator = 'graphing';
+        let chart;
+
+        function showCalculator(calculatorType) {
+            document.getElementById(currentCalculator + 'Calculator').classList.remove('active');
+            document.getElementById(calculatorType + 'Calculator').classList.add('active');
+            currentCalculator = calculatorType;
+        }
+
+        function plotFunction() {
+            const func = document.getElementById('function').value;
+            const points = generatePoints(func, -10, 10, 0.5);
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            const ctx = document.getElementById('graph').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                        label: func,
+                        data: points,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'center'
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'center'
+                        }
+                    }
+                }
+            });
+        }
+
+        function generatePoints(func, start, end, step) {
+            const points = [];
+            for (let x = start; x <= end; x += step) {
+                try {
+                    const y = eval(func.replace(/x/g, `(${x})`));
+                    if (!isNaN(y) && isFinite(y)) {
+                        points.push({x, y});
+                    }
+                } catch (error) {
+                    console.error('Error evaluating function:', error);
+                }
+            }
+            return points;
+        }
+
+        function convert() {
+            const value = parseFloat(document.getElementById('conversionInput').value);
+            const fromUnit = document.getElementById('fromUnit').value;
+            const toUnit = document.getElementById('toUnit').value;
+            const conversions = {
+                'km-miles': 0.621371,
+                'miles-km': 1.60934,
+                'kg-lbs': 2.20462,
+                'lbs-kg': 0.453592,
+            };
+            const conversionKey = `${fromUnit}-${toUnit}`;
+            if (conversions[conversionKey]) {
+                const result = (value * conversions[conversionKey]).toFixed(2);
+                document.getElementById('conversionResult').textContent = `${value} ${fromUnit} = ${result} ${toUnit}`;
+            } else {
+                document.getElementById('conversionResult').textContent = 'Invalid conversion';
+            }
+        }
+
+        function appendToDisplay(value) {
+            document.getElementById('display').value += value;
+        }
+
+        function clearDisplay() {
+            document.getElementById('display').value = '';
+        }
+
+        function calculate() {
+            try {
+                const result = eval(document.getElementById('display').value);
+                document.getElementById('display').value = result;
+            } catch (error) {
+                document.getElementById('display').value = 'Error';
+            }
+        }
+
+        // Show the graphing calculator by default
+        showCalculator('graphing');
+    </script>
+</body>
+</html>
