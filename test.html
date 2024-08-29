@@ -31,6 +31,10 @@
             border: 1px solid #333;
             margin-top: 20px;
         }
+
+        .conversion-select {
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -48,12 +52,22 @@
             <h2>Basic Calculator</h2>
             <input type="text" id="basicInput" placeholder="0" disabled>
             <div class="buttons">
+                <button onclick="appendNumber('7')">7</button>
+                <button onclick="appendNumber('8')">8</button>
+                <button onclick="appendNumber('9')">9</button>
+                <button onclick="appendNumber('/')">/</button>
+                <button onclick="appendNumber('4')">4</button>
+                <button onclick="appendNumber('5')">5</button>
+                <button onclick="appendNumber('6')">6</button>
+                <button onclick="appendNumber('*')">*</button>
                 <button onclick="appendNumber('1')">1</button>
                 <button onclick="appendNumber('2')">2</button>
                 <button onclick="appendNumber('3')">3</button>
-                <button onclick="appendNumber('+')">+</button>
-                <!-- Add more buttons as needed -->
+                <button onclick="appendNumber('-')">-</button>
+                <button onclick="appendNumber('0')">0</button>
+                <button onclick="appendNumber('.')">.</button>
                 <button onclick="calculateBasic()">=</button>
+                <button onclick="appendNumber('+')">+</button>
                 <button onclick="clearBasic()">C</button>
             </div>
         </div>
@@ -63,9 +77,15 @@
             <h2>Scientific Calculator</h2>
             <input type="text" id="scientificInput" placeholder="0" disabled>
             <div class="buttons">
-                <button onclick="appendSci('sin')">sin</button>
-                <button onclick="appendSci('cos')">cos</button>
-                <!-- Add more buttons as needed -->
+                <button onclick="appendSci('Math.sin')">sin</button>
+                <button onclick="appendSci('Math.cos')">cos</button>
+                <button onclick="appendSci('Math.tan')">tan</button>
+                <button onclick="appendSci('Math.log')">log</button>
+                <button onclick="appendSci('Math.sqrt')">√</button>
+                <button onclick="appendSci('Math.pow')">x^y</button>
+                <button onclick="appendSci('Math.exp')">exp</button>
+                <button onclick="appendSci('(')">(</button>
+                <button onclick="appendSci(')')">)</button>
                 <button onclick="calculateScientific()">=</button>
                 <button onclick="clearScientific()">C</button>
             </div>
@@ -75,10 +95,17 @@
         <div id="conversion" class="calc" style="display:none;">
             <h2>Unit Conversion</h2>
             <input type="number" id="conversionInput">
-            <select id="conversionType">
+            <select id="conversionType" class="conversion-select">
                 <option value="milesToKm">Miles to Kilometers</option>
+                <option value="kmToMiles">Kilometers to Miles</option>
+                <option value="lbsToKg">Pounds to Kilograms</option>
                 <option value="kgToLbs">Kilograms to Pounds</option>
-                <!-- Add more conversions as needed -->
+                <option value="fahrenheitToCelsius">Fahrenheit to Celsius</option>
+                <option value="celsiusToFahrenheit">Celsius to Fahrenheit</option>
+                <option value="gallonsToLiters">Gallons to Liters</option>
+                <option value="litersToGallons">Liters to Gallons</option>
+                <option value="inchesToCm">Inches to Centimeters</option>
+                <option value="cmToInches">Centimeters to Inches</option>
             </select>
             <button onclick="convert()">Convert</button>
             <p id="conversionResult"></p>
@@ -87,9 +114,10 @@
         <!-- Graphing Calculator -->
         <div id="graphing" class="calc" style="display:none;">
             <h2>Graphing Calculator</h2>
-            <input type="text" id="graphFunction" placeholder="Enter function (e.g., y=x^2)">
+            <input type="text" id="graphFunction" placeholder="Enter function (e.g., y=Math.pow(x,2))">
             <button onclick="plotGraph()">Plot</button>
-            <canvas id="graphCanvas" width="200" height="200"></canvas>
+            <canvas id="graphCanvas" width="400" height="400"></canvas>
+            <p id="coordinates"></p>
         </div>
     </div>
 
@@ -133,10 +161,37 @@
             let type = document.getElementById('conversionType').value;
             let result;
 
-            if (type === 'milesToKm') {
-                result = input * 1.60934;
-            } else if (type === 'kgToLbs') {
-                result = input * 2.20462;
+            switch (type) {
+                case 'milesToKm':
+                    result = input * 1.60934;
+                    break;
+                case 'kmToMiles':
+                    result = input * 0.621371;
+                    break;
+                case 'lbsToKg':
+                    result = input * 0.453592;
+                    break;
+                case 'kgToLbs':
+                    result = input * 2.20462;
+                    break;
+                case 'fahrenheitToCelsius':
+                    result = (input - 32) * 5/9;
+                    break;
+                case 'celsiusToFahrenheit':
+                    result = (input * 9/5) + 32;
+                    break;
+                case 'gallonsToLiters':
+                    result = input * 3.78541;
+                    break;
+                case 'litersToGallons':
+                    result = input * 0.264172;
+                    break;
+                case 'inchesToCm':
+                    result = input * 2.54;
+                    break;
+                case 'cmToInches':
+                    result = input * 0.393701;
+                    break;
             }
 
             document.getElementById('conversionResult').textContent = 'Result: ' + result;
@@ -151,12 +206,25 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             ctx.beginPath();
-            for (let x = -10; x <= 10; x += 0.1) {
-                let y = eval(functionInput.replace(/x/g, x));
-                ctx.lineTo(x * 20 + 100, -y * 20 + 100);
-            }
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.strokeStyle = "#000";
             ctx.stroke();
-        }
-    </script>
-</body>
-</html>
+
+            ctx.beginPath();
+            ctx.strokeStyle = "#FF0000";
+
+            for (let x = -canvas.width / 2; x <= canvas.width / 2; x += 0.5) {
+                let xValue = x / 20;
+                let yValue = eval(functionInput.replace(/x/g, xValue));
+                let canvasX = canvas.width / 2 + x;
+                let canvasY = canvas.height / 2 - yValue * 20;
+
+                if (x === -canvas.width / 2) {
+                    ctx.moveTo(canvasX, canvasY);
+                } else {
+                    ctx.lineTo(canvasX, canvasY);
+                }
+           
